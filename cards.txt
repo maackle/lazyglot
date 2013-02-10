@@ -1,0 +1,35 @@
+きゃく,きゃく,"guest | visitor
+customer | client | shopper | spectator | audience | tourist | sightseer | passenger",ichi1|news1|nf01
+けんめい,けんめい,"eagerness | earnestness | risking one's life",news1|nf05
+きゃく,きゃく,"amendment (of the ritsuryo)",
+おおい,おおい,"hey! | oi!
+me",
+おおい,おおい,"toothed medick (Medicago polymorpha) | hairy medick | bur clover
+white clover (Trifolium repens)",
+おおい,おおい,"cover | mantle | shroud | hood",news2|nf36
+ねらう,ねらう,"to aim at",ichi1|news1|nf13
+けんめい,けんめい,"wisdom | intelligence | prudence",ichi1|news1|nf14
+はず,はず,"purging croton (Croton tiglium)",
+おおい,おおい,"many | numerous",ichi1|news2|nf44
+おおい,おおい,"greater (of equal court ranks) | upper | senior
+a great deal | very much",
+きゃく,きゃく,"counter for chairs or seats",
+よーし,よーし,"alright | all right | right on | looking good | OK | okay",
+いっぱい,いっぱい,"amount necessary to fill a container (e.g. cupful, spoonful, etc.) | drink (usu. alcoholic)
+full
+one squid, octopus, crab, etc. | one boat
+fully | to capacity
+a lot | much
+all of ... | the entire ...",ichi1|news1|nf15
+いっぱい,いっぱい,"one defeat",news1|nf15
+はず,はず,"expectation that something took place, will take place or was in some state | it should be so | bound to be | expected to be | must be
+nock (of a bow)
+nock (of an arrow)
+nock-shaped grip (between thumb and forefinger)
+wooden frame on the tip of the mast of a Japanese ship that prevents the hawser from falling out",ichi1|news2|nf42
+きもの,きもの,"clothing | clothes
+kimono (or other trad. Japanese clothing)",ichi1|news1|nf09
+けんする,けんする,"to inspect | to supervise",
+駅,駅,"station",ichi1|news1|nf05
+けんする,けんする,"to attempt | to test | to try out",
+けんめい,けんめい,"term | subject | title",
