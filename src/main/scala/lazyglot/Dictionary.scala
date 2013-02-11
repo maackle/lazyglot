@@ -4,12 +4,9 @@ import org.squeryl.PrimitiveTypeMode._
 import org.squeryl
 import squeryl.adapters.H2Adapter
 import squeryl.{KeyedEntity, Session}
-import java.io.File
 import xml.XML
 
 object Dictionary extends squeryl.Schema {
-
-  private var initialized_? = false
 
   trait IdPK extends KeyedEntity[Long] {
     var id:Long = 0
@@ -31,6 +28,7 @@ object Dictionary extends squeryl.Schema {
                           ) extends IdPK {
     def this() = this("",ReadingType.Invalid, 0)
     def entries = readingsToEntries.left(this)
+    def common_? = ! priority.isEmpty
   }
 
   case class Sense(
@@ -63,20 +61,25 @@ object Dictionary extends squeryl.Schema {
     e.id is(primaryKey)
   ))
 
-  on(readings)( e => declare (
-    e.id is(autoIncremented)
+  on(readings)( r => declare (
+    r.id is(primaryKey, autoIncremented),
+    r.text is(indexed),
+    r.entry_id is(indexed)
   ))
 
   on(senses)( s => declare (
-    s.glosses is(dbType("TEXT")),
-    s.id is(autoIncremented)
+    s.id is(primaryKey, autoIncremented),
+    s.glosses is(dbType("TEXT"))
   ))
 
   def build(filename:String = "src/main/resources/dict/JMdict_e") {
-    init()
+    init
     System.setProperty("entityExpansionLimit", "250000")
     val xml = XML.load(new java.io.InputStreamReader(new java.io.FileInputStream(filename), "UTF-8"))
     val entries = xml \ "entry"
+
+    val minKanaLength = 2
+
     transaction {
       try {
         Dictionary.drop
@@ -93,18 +96,22 @@ object Dictionary extends squeryl.Schema {
         Dictionary.entries.insert(entry)
 
         for( rs <- e \ "r_ele") {
-          val reading = Dictionary.readings.insert(Reading(
-            text = (rs \ "reb").text,
-            `type` = ReadingType.Kana,
-            entry_id = entry.id,
-            priority = (rs \ "re_pri").map(_.text).mkString("|")
-          ))
-          entry.readings.associate(reading)
+          val text: String = (rs \ "reb").text
+          if (text.length >= minKanaLength) {
+            val reading = Dictionary.readings.insert(Reading(
+              text = text,
+              `type` = ReadingType.Kana,
+              entry_id = entry.id,
+              priority = (rs \ "re_pri").map(_.text).mkString("|")
+            ))
+            entry.readings.associate(reading)
+          }
         }
 
         for( rs <- e \ "k_ele") {
+          val text: String = (rs \ "keb").text
           val reading = Dictionary.readings.insert(Reading(
-            text = (rs \ "keb").text,
+            text = text,
             `type` = ReadingType.Kanji,
             entry_id = entry.id,
             priority = (rs \ "ke_pri").map(_.text).mkString("|")
@@ -129,11 +136,8 @@ object Dictionary extends squeryl.Schema {
 
   }
 
-  def init() {
+  lazy val init = {
     import org.squeryl.SessionFactory
-
-    if (initialized_?) return
-    initialized_? = true
 
     Class.forName("org.h2.Driver");
 

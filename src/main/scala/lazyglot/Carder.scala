@@ -1,22 +1,24 @@
 package lazyglot
 
-import io.Source
-import xml.XML
-import java.io.{PrintWriter, File}
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl
-import squeryl.adapters.H2Adapter
-import squeryl.Session
+import java.io.OutputStream
 
 object Carder {
 
   import Dictionary._
 
-  case class Card(expression:String, reading:String, meaning:String, extra:String="") {
-    def escape(str:String) = "\"%s\"".format(str)
-    def toCSV = Seq(expression, reading, escape(meaning), extra).map( text => {
-      text
-    }).mkString(",")
+  case class Card(expression:String, reading:Option[String], meaning:String, extra:String="") {
+
+    private def escape(str:String) = {
+      if (str.isEmpty) ""
+      else "\"%s\"".format(str.replace("\"", "\"\""))
+    }
+
+    private def fields = Seq(expression, reading.getOrElse(expression), meaning)
+
+    def toSSV = fields.map( text => {
+      escape(text)
+    }).mkString(";")
   }
 
   def lookup(text:String) =  {
@@ -27,21 +29,49 @@ object Carder {
     Dictionary.readings.where(r => r.text === text and r.`type` === `type`)
   }
 
-  def process(segments:Iterable[Segmenter.Segment]) = transaction {
+  def process(segments:Iterable[Segmenter.Segment], limit:Int=99999, commonOnly:Boolean=true) = transaction {
+
     println("processing %d total segments: " format segments.size)
     var i = 0
     val cards = for {
-      (seg) <- segments.take(10)
-      reading <- lookup(seg.base)
+      (seg) <- segments.take(limit)
+      reading <- lookup(seg.text)
+      if !commonOnly || reading.common_?
       entry <- reading.entries
     } yield {
       Util.printProgress(i)(10,100)
       i += 1
+      val (kanji, kana) = entry.readings.partition(_.`type` == ReadingType.Kanji)
+      val topKanji = kanji.filter(_.common_?)
+      val topKana = kana.filter(_.common_?)
+      val expression = {
+        val rs = {
+          if (kanji.isEmpty)
+            kana.take(1)
+          else if (topKanji.isEmpty)
+            kanji.take(1)
+          else
+            topKanji
+        }
+        rs.map(_.text).mkString("\n")
+      }
+      val cardReading = {
+        val rs = {
+          if (kanji.isEmpty)
+            kana.take(0)
+          else if (topKana.isEmpty)
+            kana.take(1)
+          else
+            topKana
+        }
+        if(rs.isEmpty) None
+        else Some(rs.map(_.text).mkString("\n"))
+      }
       Card(
-        expression = reading.text,
-        reading = reading.text,
+        expression = expression,
+        reading = cardReading,
         meaning = {
-          entry.senses.map( s => s.glosses.replace("|", " | ")).mkString("\n")
+          entry.senses.map( s => s.glosses.replace("|", " • ")).mkString("\n")
         },
         extra = reading.priority
       )
@@ -50,8 +80,8 @@ object Carder {
     cards
   }
 
-  def write(cards:Iterable[Card], path:String) = {
-    Util.write(path)(cards.map(_.toCSV))
+  def write(cards:Iterable[Card], os:OutputStream) = {
+    Util.write(os)(cards.map(_.toSSV).view.mkString("\n"))
   }
 
 }
