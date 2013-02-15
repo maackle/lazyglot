@@ -56,14 +56,6 @@ object Wiktionary extends CommonMixins {
         DB.drop
         DB.create
 
-        //      try {
-        //        DB.drop
-        //        DB.create
-        //      }
-        //      catch {
-        //        case _ =>
-        //      }
-
         val r_crossref = """^#\s+\{\{([^|]+\|)+(\w+)}}$""".r
         //      val r_entry = """^# $""".r
 
